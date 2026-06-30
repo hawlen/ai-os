@@ -1,347 +1,225 @@
 ---
 name: mle-workflow
-description: Production machine-learning engineering workflow for data contracts, reproducible training, model evaluation, deployment, monitoring, and rollback. Use when building, reviewing, or hardening ML systems beyond one-off notebooks.
+description: Production workflow for quant strategies & ML systems — data contracts, leakage/look-ahead prevention, walk-forward evaluation, reproducible pipelines, promotion gates, monitoring, and rollback. Use when building, reviewing, or hardening a backtest, strategy search, or ML pipeline beyond a one-off notebook.
 metadata:
-  origin: ECC
+  origin: ECC, re-skinned for ARPWIZ / quant backtesting
 ---
 
-# Machine Learning Engineering Workflow
+# ML / Strategy Engineering Workflow
 
-Use this skill to turn model work into a production ML system with clear data contracts, repeatable training, measurable quality gates, deployable artifacts, and operational monitoring.
+Turn model or **strategy** work into a production-grade system with clear data contracts, repeatable
+training/backtests, measurable promotion gates, deployable artifacts, and monitoring. For ARPWIZ the "model"
+is usually a **trading strategy / signal** and the "ML system" is the **backtest + strategy-search pipeline** —
+the discipline is the same, and the failure modes are *worse* because a mistake costs real money.
 
-## When to Activate
+## When to activate
+- Planning or reviewing a strategy, signal, backtest, strategy search, classifier, or forecaster.
+- Converting notebook/exploration code into a reusable backtest, evaluation, or live-signal pipeline.
+- Designing promotion criteria, out-of-sample / walk-forward evals, experiment tracking, or rollback paths.
+- Debugging results corrupted by **look-ahead bias, label leakage, stale data, overfit search, or train/serve skew**.
+- Adding monitoring, forward-testing, or post-deploy quality checks.
 
-- Planning or reviewing a production ML feature, model refresh, ranking system, recommender, classifier, embedding workflow, or forecasting pipeline
-- Converting notebook code into a reusable training, evaluation, batch inference, or online inference pipeline
-- Designing model promotion criteria, offline/online evals, experiment tracking, or rollback paths
-- Debugging failures caused by data drift, label leakage, stale features, artifact mismatch, or inconsistent training and serving logic
-- Adding model monitoring, canary rollout, shadow traffic, or post-deploy quality checks
+## Trading & Backtest Translation
+| Generic ML term | Your equivalent (ARPWIZ) |
+|---|---|
+| Label / target | Forward return, level hit/miss, trade outcome in R |
+| Label leakage / look-ahead | Using a future bar, the signal bar's own close, repainting indicators, survivorship |
+| Train/val/test split | **Walk-forward / out-of-sample** windows — never shuffle time; respect bar order + London session/tz |
+| Feature point-in-time | A signal may use only data available **at the bar's close**, never later |
+| Offline metric (AUC) | OOS **expectancy (R), Sharpe/Sortino, profit factor, max drawdown — all net of costs** |
+| Baseline / prod model | Buy-and-hold, a random-entry sanity baseline, and your current forward-tested config |
+| Promotion gate | Beats baseline OOS **and** survives spread/commission/slippage **and** respects prop-firm drawdown — else don't trade |
+| Drift | Regime change (volatility/session/instrument): an edge can simply die |
+| Rollback | Revert to last forward-tested config; paper-only until re-validated |
 
-## Scope Calibration
+The deadliest failure is the **fake edge** — great in-sample, born of leakage / overfitting / testing-on-train.
+Treat every positive backtest as **presumed false** until it survives out-of-sample + costs + an adversarial
+pass. That is exactly what `council-loop` enforces.
 
-Use only the lanes that fit the system in front of you. This skill is useful for ranking, search, recommendations, classifiers, forecasting, embeddings, LLM workflows, anomaly detection, and batch analytics, but it should not force one architecture onto all of them.
-
-- Do not assume every model has supervised labels, online serving, a feature store, PyTorch, GPUs, human review, A/B tests, or real-time feedback.
-- Do not add heavyweight MLOps machinery when a data contract, baseline, eval script, and rollback note would make the change reviewable.
-- Do make assumptions explicit when the project lacks labels, delayed outcomes, slice definitions, production traffic, or monitoring ownership.
-- Treat examples as interchangeable scaffolds. Replace metrics, serving mode, data stores, and rollout mechanics with the project-native equivalents.
-
-## Related Skills
-
-- `python-patterns` and `python-testing` for Python implementation and pytest coverage
-- `pytorch-patterns` for deep learning models, data loaders, device handling, and training loops
-- `eval-harness` and `ai-regression-testing` for promotion gates and agent-assisted regression checks
-- `database-migrations`, `postgres-patterns`, and `clickhouse-io` for data storage and analytics surfaces
-- `deployment-patterns`, `docker-patterns`, and `security-review` for serving, secrets, containers, and production hardening
-
-## Reuse the SWE Surface
-
-Do not treat MLE as separate from software engineering. Most ECC SWE workflows apply directly to ML systems, often with stricter failure modes:
-
-The recommended `minimal --with capability:machine-learning` install keeps the core agent surface available alongside this skill. For skill-only or agent-limited harnesses, pair `skill:mle-workflow` with `agent:mle-reviewer` where the target supports agents.
-
-| SWE surface | MLE use |
-|-------------|---------|
-| `product-capability` / `architecture-decision-records` | Turn model work into explicit product contracts and record irreversible data, model, and rollout choices |
-| `repo-scan` / `codebase-onboarding` / `code-tour` | Find existing training, feature, serving, eval, and monitoring paths before introducing a parallel ML stack |
-| `plan` / `feature-dev` | Scope model changes as product capabilities with data, eval, serving, and rollback phases |
-| `tdd-workflow` / `python-testing` | Test feature transforms, split logic, metric calculations, artifact loading, and inference schemas before implementation |
-| `code-reviewer` / `mle-reviewer` | Review code quality plus ML-specific leakage, reproducibility, promotion, and monitoring risks |
-| `build-fix` / `pr-test-analyzer` | Diagnose broken CI, flaky evals, missing fixtures, and environment-specific model or dependency failures |
-| `quality-gate` / `test-coverage` | Require automated evidence for transforms, metrics, inference contracts, promotion gates, and rollback behavior |
-| `eval-harness` / `verification-loop` | Turn offline metrics, slice checks, latency budgets, and rollback drills into repeatable gates |
-| `ai-regression-testing` | Preserve every production bug as a regression: missing feature, stale label, bad artifact, schema drift, or serving mismatch |
-| `api-design` / `backend-patterns` | Design prediction APIs, batch jobs, idempotent retraining endpoints, and response envelopes |
-| `database-migrations` / `postgres-patterns` / `clickhouse-io` | Version labels, feature snapshots, prediction logs, experiment metrics, and drift analytics |
-| `deployment-patterns` / `docker-patterns` | Package reproducible training and serving images with health checks, resource limits, and rollback |
-| `canary-watch` / `dashboard-builder` | Make rollout health visible with model-version, slice, drift, latency, cost, and delayed-label dashboards |
-| `security-review` / `security-scan` | Check model artifacts, notebooks, prompts, datasets, and logs for secrets, PII, unsafe deserialization, and supply-chain risk |
-| `e2e-testing` / `browser-qa` / `accessibility` | Test critical product flows that consume predictions, including explainability and fallback UI states |
-| `benchmark` / `performance-optimizer` | Measure throughput, p95 latency, memory, GPU utilization, and cost per prediction or retrain |
-| `cost-aware-llm-pipeline` / `token-budget-advisor` | Route LLM/embedding workloads by quality, latency, and budget instead of defaulting to the largest model |
-| `documentation-lookup` / `search-first` | Verify current library behavior for model serving, feature stores, vector DBs, and eval tooling before coding |
-| `git-workflow` / `github-ops` / `opensource-pipeline` | Package MLE changes for review with crisp scope, generated artifacts excluded, and reproducible test evidence |
-| `strategic-compact` / `dmux-workflows` | Split long ML work into parallel tracks: data contract, eval harness, serving path, monitoring, and docs |
-
-## Ten MLE Task Simulations
-
-Use these simulations as coverage checks when planning or reviewing MLE work. A strong MLE workflow should reduce each task to explicit contracts, reusable SWE surfaces, automated evidence, and a reviewable artifact.
-
-| ID | Common MLE task | Streamlined ECC path | Required output | Pipeline lanes covered |
-|----|-----------------|----------------------|-----------------|------------------------|
-| MLE-01 | Frame an ambiguous prediction, ranking, recommender, classifier, embedding, or forecast capability | `product-capability`, `plan`, `architecture-decision-records`, `mle-workflow` | Iteration Compact naming who cares, decision owner, success metric, unacceptable mistakes, assumptions, constraints, and first experiment | product contract, stakeholder loss, risk, rollout |
-| MLE-02 | Define metric goals, labels, data sources, and the mistake budget | `repo-scan`, `database-reviewer`, `database-migrations`, `postgres-patterns`, `clickhouse-io` | Data and metric contract with entity grain, label timing, label confidence, feature timing, point-in-time joins, split policy, and dataset snapshot | data contract, metric design, leakage, reproducibility |
-| MLE-03 | Build a baseline model and scoring path before adding complexity | `tdd-workflow`, `python-testing`, `python-patterns`, `code-reviewer` | Baseline scorer with confusion matrix, calibration notes, latency/cost estimate, known weaknesses, and tests for score shape and determinism | baseline, scoring, testing, serving parity |
-| MLE-04 | Generate features from hypotheses about what separates outcomes | `python-patterns`, `pytorch-patterns`, `docker-patterns`, `deployment-patterns` | Feature plan and transform module covering signal source, missing values, outliers, correlations, leakage checks, and train/serve equivalence | feature pipeline, leakage, training, artifacts |
-| MLE-05 | Tune thresholds, configs, and model complexity under tradeoffs | `eval-harness`, `ai-regression-testing`, `quality-gate`, `test-coverage` | Threshold/config report comparing precision, recall, F1, AUC, calibration, group slices, latency, cost, complexity, and acceptable error classes | evaluation, threshold, promotion, regression |
-| MLE-06 | Run error analysis and turn mistakes into the next experiment | `eval-harness`, `ai-regression-testing`, `mle-reviewer`, `silent-failure-hunter` | Error cluster report for false positives, false negatives, ambiguous labels, stale features, missing signals, and bug traces with lessons captured | error analysis, bug trace, iteration, regression |
-| MLE-07 | Package a model artifact for batch or online inference | `api-design`, `backend-patterns`, `security-review`, `security-scan` | Versioned artifact bundle with preprocessing, config, dependency constraints, schema validation, safe loading, and PII-safe logs | artifact, security, inference contract |
-| MLE-08 | Ship online serving or batch scoring with feedback capture | `api-design`, `backend-patterns`, `e2e-testing`, `browser-qa`, `accessibility` | Prediction endpoint or batch job with response envelope, timeout, batching, fallback, model version, confidence, feedback logging, and product-flow tests | serving, batch inference, fallback, user workflow |
-| MLE-09 | Roll out a model with shadow traffic, canary, A/B test, or rollback | `canary-watch`, `dashboard-builder`, `verification-loop`, `performance-optimizer` | Rollout plan naming traffic split, dashboards, p95 latency, cost, quality guardrails, rollback artifact, and rollback trigger | deployment, canary, rollback |
-| MLE-10 | Operate, debug, and refresh a production model after launch | `silent-failure-hunter`, `dashboard-builder`, `mle-reviewer`, `doc-updater`, `github-ops` | Observation ledger and refresh plan with drift checks, delayed-label health, alert owners, runbook updates, retrain criteria, and PR evidence | monitoring, incident response, retraining |
+## Pair with your tools
+- `council-loop` — build-and-verify spine: no "real edge" without executed, reproduced, attacked evidence.
+- `mle-reviewer` (agent) — adversarial review for leakage / look-ahead / eval mistakes.
+- `silent-failure-hunter` (agent) — no fetch / fill / PnL path may fail quietly.
+- `python-testing-patterns` — test feature transforms, split logic, and metric math before trusting them.
+- `latency-critical-systems` / `python-performance-optimization` — fast strategy search + live data path.
+- `data-engineer` (agent) — Alpaca fetch, bar store, dataset snapshots.
 
 ## Iteration Compact
-
-Before touching model code, compress the work into one reviewable artifact. This should be short enough to fit in a PR description and precise enough that another engineer can challenge the tradeoffs.
-
+Before touching strategy code, compress the work into one reviewable artifact (fits a PR description, precise
+enough that someone can challenge the tradeoffs):
 ```text
-Goal:
-Who cares:
-Decision owner:
-User or system action changed by the model:
-Success metric:
-Guardrail metrics:
-Mistake budget:
-Unacceptable mistakes:
-Acceptable mistakes:
+Goal / thesis:
+Decision owner (human): Alec
+Instrument(s) & timeframe(s):
+What action the signal changes (entry/exit/size):
+Success metric (OOS, net of costs):
+Guardrail metrics (max DD, prop-firm rules):
+Mistake budget / unacceptable losses:
 Assumptions:
-Constraints:
-Labels and data snapshot:
-Baseline:
-Candidate signals:
-Threshold or config plan:
-Eval slices:
-Known risks:
+Constraints (paper-only? session? news filter?):
+Data snapshot (source, range, tz):
+Baseline to beat:
+Candidate signal(s):
+Parameter plan (and how you'll avoid overfitting the search):
+Eval slices (regime, session, instrument):
+Known risks (leakage? overfit? costs?):
 Next experiment:
-Rollback or fallback:
+Rollback / fallback:
 ```
 
-This compact is the MLE equivalent of a strong SWE design note. It keeps the team from optimizing a metric no one trusts, adding features that do not address the real error mode, or shipping complexity without a rollback.
+## Decision Brain (for ambiguous, high-impact work)
+1. Start from the **decision/trade**, not the model. Name the action the signal changes.
+2. Name the cost of each error: a false entry (loss + fees) and a missed move (opportunity) are not equal.
+3. Convert ambiguity into **falsifiable hypotheses**: what would separate winners from losers, and what evidence would disprove it?
+4. Check prior art / a known baseline before inventing a bespoke system.
+5. Score choices with (probability, confidence) × (cost, severity, impact).
+6. Consider adversarial reality: regime shift, slippage, spread widening on news, and your own search overfitting.
+7. Prefer the **simplest** change that reduces the most important mistake. Simplicity minimizes blunders and keeps iteration fast.
+8. Record the decision, evidence, counter-argument, and next reversible step (the `council-loop` ledger).
 
-## Decision Brain
-
-Use this loop whenever the task is ambiguous, high-impact, or metric-heavy:
-
-1. Start from the decision, not the model. Name the action that changes downstream behavior.
-2. Name who cares and why. Different stakeholders pay different costs for false positives, false negatives, latency, compute spend, opacity, or missed opportunities.
-3. Convert ambiguity into hypotheses. Ask what signal would separate outcomes, what evidence would disprove it, and what simple baseline should be hard to beat.
-4. Research prior art or a nearby known problem before inventing a bespoke system.
-5. Score choices with `(probability, confidence) x (cost, severity, importance, impact)`.
-6. Consider adversarial behavior, incentives, selective disclosure, distribution shift, and feedback loops.
-7. Prefer the simplest change that reduces the most important mistake. Simplicity is not laziness; it is a way to minimize blunders while preserving iteration speed.
-8. Capture the decision, evidence, counterargument, and next reversible step.
-
-## Metric and Mistake Economics
-
+## Metric & Cost Economics
 Choose metrics from failure costs, not habit:
+- **Expectancy (R per trade)** and **profit factor** are primary — they tie directly to PnL.
+- **Max drawdown** and **prop-firm daily/total drawdown** are hard guardrails: an edge that breaches them is unusable regardless of return.
+- Sharpe/Sortino for risk-adjusted comparison across strategies.
+- **Always net of costs.** Report gross vs net (spread + commission + realistic slippage). If the cost haircut eats most of the edge, there is no edge.
+- Compare against buy-and-hold and a random-entry baseline before celebrating.
+- Treat live/forward results as **delayed, biased labels** — lag and tiny samples; don't overreact to a handful of trades.
 
-- Use a confusion matrix early so the team can discuss concrete false positives and false negatives instead of abstract accuracy.
-- Favor precision when the cost of an incorrect positive decision dominates.
-- Favor recall when the cost of a missed positive dominates.
-- Use F1 only when the precision/recall tradeoff is genuinely balanced and explainable.
-- Use AUC or ranking metrics when ordering quality matters more than a single threshold.
-- Track latency, throughput, memory, and cost as first-class metrics because they shape feasible model complexity.
-- Compare against a baseline and the current production model before celebrating an offline gain.
-- Treat real-world feedback signals as delayed labels with bias, lag, and coverage gaps; do not treat them as ground truth without analysis.
+Every metric should state which mistake it makes cheaper, which it makes more likely, and that the human owns the risk-appetite call.
 
-Every metric choice should state which mistake it makes cheaper, which mistake it makes more likely, and who absorbs that cost.
+## Data & Signal Hypotheses
+Signals come from a theory of separation, and every one is a leakage suspect:
+- For each candidate feature, state **why** it should separate outcomes and **how it could peek at the future**.
+- Indicators that repaint, or any value using the signal bar's close/after, are look-ahead — gate them to the *next* bar.
+- Decide how gaps are handled (weekend gaps, halts) — absence may be informative or a reason to skip.
+- For outliers (news spikes), decide: clip, exclude, or treat as the signal itself.
+- Beware **overfitting the search**: the more configs you try, the more false winners appear — count every config tried and correct for it in the ledger.
 
-## Data and Feature Hypotheses
-
-Features should come from a theory of separation:
-
-- Text, categorical fields, numeric histories, graph relationships, recency, frequency, and aggregates are candidate signal families, not automatic features.
-- For every feature family, state why it should separate outcomes and how it could leak future information.
-- For noisy labels, consider adjudication, label confidence, soft targets, or confidence weighting.
-- For class imbalance, compare weighted loss, resampling, threshold movement, and calibrated decision rules.
-- For missing values, decide whether absence is informative, imputable, or a reason to abstain.
-- For outliers, decide whether to clip, bucket, investigate, or preserve them as rare but important signal.
-- For correlated features, check whether they are redundant, unstable, or proxies for unavailable future state.
-
-Do not add model complexity until error analysis shows that the baseline is failing for a reason additional signal or capacity can plausibly fix.
+Do not add complexity until error analysis shows the baseline failing for a reason more signal/capacity can plausibly fix.
 
 ## Error Analysis Loop
-
-After each baseline, training run, threshold change, or config change:
-
-1. Split mistakes into false positives, false negatives, abstentions, low-confidence cases, and system failures.
-2. Cluster errors by shared traits: language, entity type, source, time, geography, device, sparsity, recency, feature freshness, label source, or model version.
-3. Separate model mistakes from data bugs, label ambiguity, product ambiguity, instrumentation gaps, and serving mismatches.
-4. Trace each major cluster to one of four moves: better labels, better features, better threshold/config, or better product fallback.
-5. Preserve every important mistake as a regression test, eval slice, dashboard panel, or runbook entry.
-6. Write the next iteration as a falsifiable experiment, not a vague "improve model" task.
-
-The strongest MLE loop is not train -> metric -> ship. It is mistake -> cluster -> hypothesis -> experiment -> evidence -> simpler system.
+After each backtest, parameter change, or forward-test window:
+1. Split outcomes: winners, losers, scratched, missed entries, system/data failures.
+2. Cluster by shared traits: instrument, session, regime (vol), time, news proximity, data gaps, parameter set.
+3. Separate strategy mistakes from **data bugs, look-ahead, ignored costs, and execution/fill mismatches**.
+4. Trace each cluster to one move: better data, better signal, better threshold/parameters, or better risk/exit rule.
+5. Preserve every important failure as a **regression test or eval slice** — a leakage you fixed must never silently return.
+6. Write the next iteration as a falsifiable experiment, not "improve the strategy."
 
 ## Observation Ledger
-
-Keep a compact decision and evidence trail beside the code, PR, experiment report, or runbook:
-
+Keep a compact, append-only evidence trail beside the code/PR/experiment (this IS the `council-loop` ledger):
 ```text
 Iteration:
 Change:
-Why this mattered:
-Metric movement:
-Slice movement:
-False positives:
-False negatives:
-Unexpected errors:
+Why it mattered:
+OOS metric movement (net of costs):
+Slice movement (regime/session):
+Winners / losers / surprises:
 Decision:
-Tradeoff accepted:
+Tradeoff accepted (human):
 Lesson captured:
-Regression added:
-Debt created:
+Regression/eval added:
 Next iteration:
 ```
-
-Use the ledger to make model work cumulative. The goal is for each iteration to make the next decision easier, not merely to produce another artifact.
+Killed attempts stay logged, never deleted — that's how you honestly correct for how many configs you tried.
 
 ## Core Workflow
+### 1. Define the trade / prediction contract
+Target, decision owner (Alec), instrument/timeframe, entry/exit/size action, allowed latency, fallback when
+data is missing, and the human approval/override path for anything live. Never accept "improve the strategy" —
+tie it to an observable behavior and a measurable gate.
 
-### 1. Define the Prediction Contract
+### 2. Lock the data contract
+Instrument & timeframe grain; bar timestamp, timezone (London) and session boundaries; exactly what data is
+available **at the signal bar's close**; train/OOS/walk-forward split policy; required columns, allowed gaps,
+ranges; dataset version/snapshot for reproducibility. **Guard leakage first**: any value not available at
+prediction time is removed or moved to an analysis-only path.
 
-Capture the product-level contract before writing model code:
-
-- Prediction target and decision owner
-- Input entity, output schema, confidence/calibration fields, and allowed latency
-- Batch, online, streaming, or hybrid serving mode
-- Fallback behavior when the model, feature store, or dependency is unavailable
-- Human review or override path for high-impact decisions
-- Privacy, retention, and audit requirements for inputs, predictions, and labels
-
-Do not accept "improve the model" as a requirement. Tie the model to an observable product behavior and a measurable acceptance gate.
-
-### 2. Lock the Data Contract
-
-Every ML task needs an explicit data contract:
-
-- Entity grain and primary key
-- Label definition, label timestamp, and label availability delay
-- Feature timestamp, freshness SLA, and point-in-time join rules
-- Train, validation, test, and backtest split policy
-- Required columns, allowed nulls, ranges, categories, and units
-- PII or sensitive fields that must not enter training artifacts or logs
-- Dataset version or snapshot ID for reproducibility
-
-Guard against leakage first. If a feature is not available at prediction time, or is joined using future information, remove it or move it to an analysis-only path.
-
-### 3. Build a Reproducible Pipeline
-
-Training code should be runnable by another engineer without hidden notebook state:
-
-- Use typed config files or dataclasses for all hyperparameters and paths
-- Pin package and model dependencies
-- Set random seeds and document any nondeterministic GPU behavior
-- Record dataset version, code SHA, config hash, metrics, and artifact URI
-- Save preprocessing logic with the model artifact, not separately in a notebook
-- Keep train, eval, and inference transformations shared or generated from one source
-- Make every step idempotent so retries do not corrupt artifacts or metrics
-
-Prefer immutable values and pure transformation functions. Avoid mutating shared data frames or global config during feature generation.
-
+### 3. Build a reproducible pipeline
+Another run (or another person) must reproduce the backtest with no hidden notebook state: typed config /
+dataclasses for all params and paths; pinned deps; fixed seeds; record dataset version, code SHA, config hash,
+metrics, and artifact path; use the **same** transform code for backtest and live signal; make every step idempotent.
 ```python
 import hashlib
 from dataclasses import dataclass
 from pathlib import Path
 
-
 @dataclass(frozen=True)
-class TrainingConfig:
-    dataset_uri: str
-    model_dir: Path
+class RunConfig:
+    dataset_uri: str        # e.g. Alpaca 1m bars, snapshot id
+    out_dir: Path
     seed: int
-    learning_rate: float
-    batch_size: int
+    params: tuple           # frozen strategy parameters
 
-
-def artifact_name(config: TrainingConfig, code_sha: str) -> str:
-    config_key = f"{config.dataset_uri}:{config.seed}:{config.learning_rate}:{config.batch_size}"
-    config_hash = hashlib.sha256(config_key.encode("utf-8")).hexdigest()[:12]
-    return f"{code_sha[:12]}-{config_hash}"
+def run_id(cfg: RunConfig, code_sha: str) -> str:
+    key = f"{cfg.dataset_uri}:{cfg.seed}:{cfg.params}"
+    return f"{code_sha[:12]}-{hashlib.sha256(key.encode()).hexdigest()[:12]}"
 ```
 
-### 4. Evaluate Before Promotion
-
-Promotion criteria should be declared before training finishes:
-
-- Baseline model and current production model comparison
-- Primary metric aligned to product behavior
-- Guardrail metrics for latency, calibration, fairness slices, cost, and error concentration
-- Slice metrics for important cohorts, geographies, devices, languages, or data sources
-- Confidence intervals or repeated-run variance when metrics are noisy
-- Failure examples reviewed by a human for high-impact models
-- Explicit "do not ship" thresholds
-
+### 4. Evaluate before promotion
+Declare promotion gates **before** the out-of-sample run, and fail closed:
 ```python
+# Declared BEFORE the OOS run. Every metric is net of costs.
 PROMOTION_GATES = {
-    "auc": ("min", 0.82),
-    "calibration_error": ("max", 0.04),
-    "p95_latency_ms": ("max", 80),
+    "oos_expectancy_R":  ("min", 0.10),   # > 0.1R per trade, out-of-sample
+    "oos_profit_factor": ("min", 1.30),
+    "oos_max_drawdown":  ("max", 0.10),   # within prop-firm max drawdown
+    "cost_haircut_keep": ("min", 0.60),   # net edge keeps >= 60% of gross after costs
+    "n_oos_trades":      ("min", 100),    # enough samples to mean anything
 }
 
-
 def assert_promotion_ready(metrics: dict[str, float]) -> None:
-    missing = sorted(name for name in PROMOTION_GATES if name not in metrics)
+    missing = sorted(g for g in PROMOTION_GATES if g not in metrics)
     if missing:
-        raise ValueError(f"Model promotion metrics missing required gates: {missing}")
-
+        raise ValueError(f"missing required gates: {missing}")
     failures = {
-        name: value
-        for name, (direction, threshold) in PROMOTION_GATES.items()
-        for value in [metrics[name]]
-        if (direction == "min" and value < threshold)
-        or (direction == "max" and value > threshold)
+        name: metrics[name]
+        for name, (direction, thr) in PROMOTION_GATES.items()
+        if (direction == "min" and metrics[name] < thr)
+        or (direction == "max" and metrics[name] > thr)
     }
     if failures:
-        raise ValueError(f"Model failed promotion gates: {failures}")
+        raise ValueError(f"failed promotion gates: {failures}")
 ```
+Offline gates are necessary, not sufficient: when it changes real behavior, **forward-test / paper** before any live size.
 
-Use offline metrics as gates, not guarantees. When the model changes product behavior, plan shadow evaluation, canary rollout, or A/B testing before full rollout.
+### 5. Package for live signal / serving
+Production-ready only when the contract is testable: config + parameters + data reference versioned together;
+input validation rejects stale/out-of-range bars; the live path has a timeout and a fallback; the **same**
+feature/transform code as the backtest (prove equivalence with a test); decision logs carry config version and
+enough to reconstruct each signal. Never let backtest feature code diverge from live without an equivalence test.
 
-### 5. Package for Serving
+### 6. Operate
+Monitor both system and edge: data freshness/gaps, fill/slippage vs assumption, **realized expectancy vs
+backtest**, drawdown vs prop-firm limits, regime indicators. Every change has a rollback that names the previous
+config/artifact and the switch mechanism — and stays paper-only until re-validated.
 
-An ML artifact is production-ready only when the serving contract is testable:
+## Review checklist
+- [ ] Trade/prediction contract explicit and testable; human owns the call
+- [ ] Data contract: instrument/timeframe grain, bar timing, tz/session, snapshot/version
+- [ ] **Leakage / look-ahead checked against bar-close availability**
+- [ ] Split is walk-forward / OOS — time never shuffled
+- [ ] Backtest reproducible from code SHA + config + data version + seed
+- [ ] Metrics net of costs; compared to baseline; enough OOS trades
+- [ ] Promotion gates automated and fail closed; respect prop-firm drawdown
+- [ ] Search overfitting acknowledged and corrected (count every config tried)
+- [ ] Backtest and live transforms shared or equivalence-tested
+- [ ] Live path validates inputs, has timeout/fallback/rollback; paper-first
+- [ ] Monitoring covers data, fills/slippage, realized edge, and drawdown
 
-- Model artifact includes version, training data reference, config, and preprocessing
-- Input schema rejects invalid, stale, or out-of-range features
-- Output schema includes model version and confidence or explanation fields when useful
-- Serving path has timeout, batching, resource limits, and fallback behavior
-- CPU/GPU requirements are explicit and tested
-- Prediction logs avoid PII and include enough identifiers for debugging and label joins
-- Integration tests cover missing features, stale features, bad types, empty batches, and fallback path
+## Anti-patterns
+- Notebook state required to reproduce the backtest
+- Shuffled or random split leaks future bars into the test
+- Signal uses the bar's own close or a future bar (look-ahead / repaint)
+- Costs ignored; gross edge celebrated while net edge is negative
+- Parameters tuned on the test set repeatedly (overfitting the search)
+- Backtest feature code copied by hand into the live signal
+- "Edge" reported from 20 trades
+- Monitoring checks uptime but not realized expectancy or drawdown
+- Rollback requires a re-run instead of switching to a known-good config
 
-Never let training-only feature code diverge from serving feature code without a test that proves equivalence.
-
-### 6. Operate the Model
-
-Model monitoring needs both system and quality signals:
-
-- Availability, error rate, timeout rate, queue depth, and p50/p95/p99 latency
-- Feature null rate, range drift, categorical drift, and freshness drift
-- Prediction distribution drift and confidence distribution drift
-- Label arrival health and delayed quality metrics
-- Business KPI guardrails and rollback triggers
-- Per-version dashboards for canaries and rollbacks
-
-Every deployment should have a rollback plan that names the previous artifact, config, data dependency, and traffic-switch mechanism.
-
-## Review Checklist
-
-- [ ] Prediction contract is explicit and testable
-- [ ] Data contract defines entity grain, label timing, feature timing, and snapshot/version
-- [ ] Leakage risks were checked against prediction-time availability
-- [ ] Training is reproducible from code, config, data version, and seed
-- [ ] Metrics compare against baseline and current production model
-- [ ] Slice metrics and guardrails are included for high-risk cohorts
-- [ ] Promotion gates are automated and fail closed
-- [ ] Training and serving transformations are shared or equivalence-tested
-- [ ] Model artifact carries version, config, dataset reference, and preprocessing
-- [ ] Serving path validates inputs and has timeout, fallback, and rollback behavior
-- [ ] Monitoring covers system health, feature drift, prediction drift, and delayed labels
-- [ ] Sensitive data is excluded from artifacts, logs, prompts, and examples
-
-## Anti-Patterns
-
-- Notebook state is required to reproduce the model
-- Random split leaks future data into validation or test sets
-- Feature joins ignore event time and label availability
-- Offline metric improves while important slices regress
-- Thresholds are tuned on the test set repeatedly
-- Training preprocessing is copied manually into serving code
-- Model version is missing from prediction logs
-- Monitoring only checks service uptime, not data or prediction quality
-- Rollback requires retraining instead of switching to a known-good artifact
-
-## Output Expectations
-
-When using this skill, return concrete artifacts: data contract, promotion gates, pipeline steps, test plan, deployment plan, or review findings. Call out unknowns that block production readiness instead of filling them with assumptions.
+## Output expectations
+Return concrete artifacts: data contract, promotion gates, pipeline steps, test plan, eval/forward-test plan,
+or review findings. Call out unknowns that block production readiness instead of filling them with assumptions —
+and flag anything that needs the human's risk-appetite decision.

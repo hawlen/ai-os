@@ -134,8 +134,10 @@ Registry of every Claude Code enhancement installed on this machine. `install.ps
 
 ## 12. ECC-mined: money-critical correctness & safety (agents + skills)
 Cherry-picked from the read-only ECC reference (`reference/ECC/` @ `2159ed2`, ECC is MIT) via the §7 mining pass.
-All five are **markdown-only and self-contained** (independently re-scanned: no runtime fetch/exec). Some carry
-crypto/TS/web examples whose *patterns* transfer to Python/trading — re-skin opportunistically.
+All five are **markdown-only and self-contained** (independently re-scanned: no runtime fetch/exec).
+`mle-workflow` and `llm-trading-agent-security` have been **re-skinned in-house for ARPWIZ** (walk-forward /
+leakage / fake-edge framing; FTMO/Vantage rules, Alpaca bars, paper-first + human-in-the-loop). The other
+three are stock ECC — patterns transfer; re-skin opportunistically.
 - **Agents → `~/.claude/agents/`:**
   - `mle-reviewer` — adversarially reviews ML/backtests for **leakage & look-ahead bias** (fake-edge defense).
   - `silent-failure-hunter` — hunts swallowed exceptions / stale-data fallbacks in money-critical paths.
