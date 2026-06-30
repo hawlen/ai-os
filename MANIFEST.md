@@ -105,6 +105,24 @@ Registry of every Claude Code enhancement installed on this machine. `install.ps
 - **Vetting:** passed the `npx skills` Socket/Snyk/Gen scans at install (Safe / 0 alerts / Low Risk).
 - **Use:** ARPWIZ Python hot-paths — ask to profile or optimize slow Python.
 
+## 9. python-testing-patterns — skill (via §7)
+- **Source:** `wshobson/agents@python-testing-patterns` (MIT, 37K★, 25.8K installs).
+- **Type:** skill — pytest, fixtures, mocking, TDD strategies.
+- **Scope:** user (global) — `skills/python-testing-patterns/` → `~/.claude/skills/`.
+- **Vetting:** Socket/Snyk/Gen = Safe / 0 alerts / Low Risk. Markdown only (SKILL.md + 2 refs).
+- **Use:** ARPWIZ test suites.
+
+## 10. web-design-guidelines — skill (via §7)
+- **Source:** `vercel-labs/agent-skills@web-design-guidelines` (official Vercel, 28.5K★, **425K installs** — #5 leaderboard).
+- **Type:** skill — audits UI code against Vercel's Web Interface Guidelines (accessibility / UX / design).
+- **Scope:** user (global) — `skills/web-design-guidelines/` → `~/.claude/skills/`.
+- **⚠️ Vetting — Snyk = Med (understood):** it's a *thin shim* that **WebFetches live guidelines** from
+  `raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/command.md` at runtime, then applies
+  them. No executable code (single markdown file) → no exec risk, but it depends on a live external URL and the
+  rules are NOT pinned. Accepted (official source). **For full reproducibility, optionally pin** a snapshot of
+  `command.md` into this skill and point it at the local copy.
+- **Use:** AIOX client sites — "review my UI / check accessibility / audit design".
+
 ---
 
 ## Global-layer state (this machine)
