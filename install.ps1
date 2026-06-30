@@ -38,12 +38,15 @@ try {
     Good 'superpowers installed/enabled (restart Claude Code to apply if it was just added)'
 } catch { Warn "plugin install (likely already installed): $($_.Exception.Message)" }
 
-# --- 4. council-loop skill (user scope, global) ------------------------------------------------
-Info 'Deploying council-loop skill to ~/.claude/skills ...'
+# --- 4. skills (user scope, global) ------------------------------------------------------------
+#   Deploys every directory under skills\ → ~/.claude/skills/ (council-loop, python-performance-
+#   optimization, and any future vendored skill).
+Info 'Deploying skills to ~/.claude/skills ...'
+$skillsSrc = Join-Path $PSScriptRoot 'skills'
 $skillsDst = Join-Path $env:USERPROFILE '.claude\skills'
 New-Item -ItemType Directory -Force $skillsDst | Out-Null
-Copy-Item (Join-Path $PSScriptRoot 'skills\council-loop') $skillsDst -Recurse -Force
-Good 'council-loop skill deployed'
+Get-ChildItem $skillsSrc -Directory | ForEach-Object { Copy-Item $_.FullName $skillsDst -Recurse -Force }
+Good ((Get-ChildItem $skillsSrc -Directory | Measure-Object).Count.ToString() + ' skill(s) deployed to ~/.claude/skills')
 
 # --- 5. generic subagents (user scope, global) -------------------------------------------------
 Info 'Deploying subagents to ~/.claude/agents ...'

@@ -97,6 +97,14 @@ Registry of every Claude Code enhancement installed on this machine. `install.ps
 - **Note:** our `anthropic-skills` (docx/pdf/pptx/xlsx/skill-creator) come from `anthropics/skills` — the #2
   source on the leaderboard — so we're already in this ecosystem.
 
+## 8. python-performance-optimization — skill (first adopted via §7)
+- **Source:** `wshobson/agents@python-performance-optimization` (MIT, 37K★, 27.7K installs on skills.sh).
+  The first skill brought in through the discovery→vet→vendor workflow.
+- **Type:** Claude Code **skill** — profile/optimize Python (cProfile, memory profilers, perf best practices).
+- **Scope:** user (global) — `skills/python-performance-optimization/` → `~/.claude/skills/` (via `install.ps1`).
+- **Vetting:** passed the `npx skills` Socket/Snyk/Gen scans at install (Safe / 0 alerts / Low Risk).
+- **Use:** ARPWIZ Python hot-paths — ask to profile or optimize slow Python.
+
 ---
 
 ## Global-layer state (this machine)
