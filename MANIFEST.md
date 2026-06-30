@@ -81,6 +81,21 @@ Registry of every Claude Code enhancement installed on this machine. `install.ps
   `PreToolUse` matcher (Bash/PowerShell) in that project's `.claude/settings.local.json`, or wire it
   globally in `~/.claude/settings.json`. Remove/relax the regex list freely.
 
+## 7. skills.sh / `npx skills` — skill discovery + install (Vercel Labs)
+- **Repo:** https://github.com/vercel-labs/skills (24K★, official Vercel Labs) · Registry: https://skills.sh
+- **Type:** CLI run on-demand via `npx` — nothing installed globally.
+- **Role here:** the **discovery front-end** for this hub. Find battle-tested skills, vet them, then
+  **vendor the keepers into this hub** (preferred over relying only on `npx skills add -g`).
+- **Discover:** browse the https://skills.sh leaderboard, or `npx -y skills find "<query>" [--owner <owner>]`.
+- **Vet before adopting (mirrors our own rule):** prefer 1K+ installs; trust official sources
+  (`vercel-labs`, `anthropics`, `microsoft`); check the source repo's stars (<100★ → skeptical).
+- **Adopt — preferred (hub stays the single gate):** copy the chosen `SKILL.md` into `skills/<name>/`, add a
+  section here, wire `install.ps1`.
+  **Alt — quick:** `npx skills add <owner/repo@skill> -g -y` — but the CLI targets `~/.agent/skills/` while
+  Claude Code reads `~/.claude/skills/`, so verify it actually lands where CC finds it.
+- **Note:** our `anthropic-skills` (docx/pdf/pptx/xlsx/skill-creator) come from `anthropics/skills` — the #2
+  source on the leaderboard — so we're already in this ecosystem.
+
 ---
 
 ## Global-layer state (this machine)
