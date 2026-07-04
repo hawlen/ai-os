@@ -1,18 +1,23 @@
 #!/usr/bin/env pwsh
 <#
-  claude-tooling one-line bootstrap (Windows).
+  AI OS (machine layer) one-line bootstrap (Windows).
 
   On any Windows machine with git + Claude Code:
-    irm https://raw.githubusercontent.com/hawlen/claude-tooling/main/bootstrap.ps1 | iex
+    irm https://raw.githubusercontent.com/hawlen/ai-os/main/bootstrap.ps1 | iex
 
   Clones (or updates) the hub, then runs the idempotent installer. Override the clone
-  location with  $env:CLAUDE_TOOLING_DIR  before running.
+  location with  $env:AI_OS_DIR  before running. (Repo was formerly named
+  claude-tooling — existing ~/claude-tooling clones keep updating in place.)
 #>
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$repo = 'https://github.com/hawlen/claude-tooling.git'
-$dest = if ($env:CLAUDE_TOOLING_DIR) { $env:CLAUDE_TOOLING_DIR } else { Join-Path $env:USERPROFILE 'claude-tooling' }
+$repo = 'https://github.com/hawlen/ai-os.git'
+$legacy = Join-Path $env:USERPROFILE 'claude-tooling'
+$dest = if ($env:AI_OS_DIR) { $env:AI_OS_DIR }
+        elseif ($env:CLAUDE_TOOLING_DIR) { $env:CLAUDE_TOOLING_DIR }
+        elseif (Test-Path (Join-Path $legacy '.git')) { $legacy }
+        else { Join-Path $env:USERPROFILE 'ai-os' }
 
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
     throw 'git is required. Install Git for Windows (winget install Git.Git) and re-run.'

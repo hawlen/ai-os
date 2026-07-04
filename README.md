@@ -1,8 +1,12 @@
-# claude-tooling
+# AI OS — Machine Layer
 
-A single place to **install, manage, update, and reproduce** every Claude Code enhancement on this
-machine (Alec's). Each tool here becomes available to *every* Claude Code session via the global layer
-at `~/.claude/` (skills, commands, agents, settings/MCP) or a global CLI on PATH.
+*(formerly `claude-tooling` — old links redirect)*
+
+The **operating layer of AI OS**: a single place to **install, manage, update, and reproduce** every
+Claude Code enhancement on a machine. Each tool here becomes available to *every* Claude Code session
+via the global layer at `~/.claude/` (skills, commands, agents, settings/MCP) or a global CLI on PATH.
+Projects are started separately from the **project template**:
+[hawlen/ai-os-template](https://github.com/hawlen/ai-os-template).
 
 ## Install on a new machine (one line)
 
@@ -11,15 +15,16 @@ self-installs `uv`; export `TWENTY_FIRST_API_KEY` first if you want the Magic MC
 
 **Windows (PowerShell):**
 ```powershell
-irm https://raw.githubusercontent.com/hawlen/claude-tooling/main/bootstrap.ps1 | iex
+irm https://raw.githubusercontent.com/hawlen/ai-os/main/bootstrap.ps1 | iex
 ```
 
 **macOS / Linux:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/hawlen/claude-tooling/main/bootstrap.sh | bash
+curl -fsSL https://raw.githubusercontent.com/hawlen/ai-os/main/bootstrap.sh | bash
 ```
 
-The bootstrap clones the hub to `~/claude-tooling` (override with `CLAUDE_TOOLING_DIR`) and runs the
+The bootstrap clones the hub to `~/ai-os` (override with `AI_OS_DIR`; a pre-existing
+`~/claude-tooling` clone keeps updating in place) and runs the
 idempotent installer, deploying every skill, subagent, plugin, and CLI into `~/.claude`. Re-run any time to update.
 
 ## How the global layer works

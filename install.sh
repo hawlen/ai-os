@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# claude-tooling installer (macOS/Linux) — IDEMPOTENT. Mirrors install.ps1.
+# AI OS machine-layer installer (macOS/Linux) — IDEMPOTENT. Mirrors install.ps1.
 # Re-installs / re-syncs every global Claude Code tool. Safe to run repeatedly.
 #   bash install.sh
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-info(){ printf '\033[36m[claude-tooling]\033[0m %s\n' "$1"; }
+info(){ printf '\033[36m[ai-os]\033[0m %s\n' "$1"; }
 ok(){   printf '   \033[32mOK\033[0m %s\n' "$1"; }
 warn(){ printf '   \033[33m!!\033[0m %s\n' "$1"; }
 

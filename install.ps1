@@ -1,6 +1,6 @@
 #requires -Version 5
 <#
-  claude-tooling installer — IDEMPOTENT. Re-installs / re-syncs every global Claude Code tool on this
+  AI OS machine-layer installer — IDEMPOTENT. Re-installs / re-syncs every global Claude Code tool on this
   machine. Safe to run repeatedly.
 
   Run:  powershell -ExecutionPolicy Bypass -File .\install.ps1
@@ -9,7 +9,7 @@
 param()
 
 $ErrorActionPreference = 'Stop'
-function Info($m) { Write-Host "[claude-tooling] $m" -ForegroundColor Cyan }
+function Info($m) { Write-Host "[ai-os] $m" -ForegroundColor Cyan }
 function Good($m) { Write-Host "   OK  $m" -ForegroundColor Green }
 function Warn($m) { Write-Host "   !!  $m" -ForegroundColor Yellow }
 

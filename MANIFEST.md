@@ -2,7 +2,8 @@
 
 Registry of every Claude Code enhancement installed on this machine. `install.ps1` reproduces all of it.
 
-> Remote: **github.com/hawlen/claude-tooling** (private). Clone + `install.ps1` = full setup on a fresh box.
+> Remote: **github.com/hawlen/ai-os** (public; formerly `claude-tooling`). Clone + `install.ps1` = full setup on a fresh box.
+> This is the **machine layer** of AI OS. The **project template** lives at github.com/hawlen/ai-os-template.
 
 ---
 
@@ -32,7 +33,7 @@ Registry of every Claude Code enhancement installed on this machine. `install.ps
   claude plugin install superpowers@claude-plugins-official
   ```
 - **Coordinate note (2026-07-04):** standardized from `superpowers@superpowers-marketplace` to the
-  official marketplace, because hawlen/ai-os enables `superpowers@claude-plugins-official` at project
+  official marketplace, because hawlen/ai-os-template enables `superpowers@claude-plugins-official` at project
   scope — two coordinates for the same plugin load its ~20 skills TWICE per session (pure token waste).
   `install.ps1`/`install.sh` auto-migrate (uninstall the old coordinate before installing).
 - **Provides (skills auto-surface when relevant):** brainstorming · writing-plans ·
