@@ -7,6 +7,8 @@
 
 param([Parameter(Mandatory=$true)][string]$Ref)
 $ErrorActionPreference = 'Continue'
+$env:GIT_TERMINAL_PROMPT = '0'
+$env:GCM_INTERACTIVE = 'never'
 Set-Location $PSScriptRoot
 
 git fetch origin --prune

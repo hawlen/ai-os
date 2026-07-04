@@ -4,6 +4,8 @@
 
 param([Parameter(Mandatory=$true)][string]$Message)
 $ErrorActionPreference = 'Continue'
+$env:GIT_TERMINAL_PROMPT = '0'
+$env:GCM_INTERACTIVE = 'never'
 $root = $PSScriptRoot
 $machine = $env:COMPUTERNAME
 $branch = "machine/$machine"

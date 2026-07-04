@@ -36,6 +36,7 @@ AI OS/
 ```powershell
 git clone https://github.com/hawlen/ai-os.git "C:\AI OS"
 powershell -ExecutionPolicy Bypass -File "C:\AI OS\install.ps1"
+powershell -ExecutionPolicy Bypass -File "C:\AI OS\connect-github.ps1"   # one-time GitHub connection
 ```
 
 `install.ps1` is idempotent and non-destructive:

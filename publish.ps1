@@ -5,6 +5,8 @@
 
 param([string]$Ref = '')
 $ErrorActionPreference = 'Continue'
+$env:GIT_TERMINAL_PROMPT = '0'
+$env:GCM_INTERACTIVE = 'never'
 
 if (-not (Test-Path (Join-Path $env:USERPROFILE '.ai-os-admin'))) {
     Write-Host '[AI OS] This is not the admin PC (no ~/.ai-os-admin marker). Refusing to update main.'
