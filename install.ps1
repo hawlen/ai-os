@@ -82,13 +82,20 @@ foreach ($eventName in @('SessionStart', 'SessionEnd')) {
             foreach ($h in @($entry.hooks)) {
                 if ($null -ne $h) {
                     $joined = "$($h.command) $((@($h.args) -join ' '))"
-                    if ($joined -like '*log-session.ps1*') { $alreadyThere = $true }
+                    if ($joined -like '*log-session.ps1*') {
+                        $alreadyThere = $true
+                        # Checkout moved: repoint the hook at this copy.
+                        if (-not (@($h.args) -contains $hookScript)) {
+                            $h.args = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $hookScript)
+                            Write-Host "[AI OS] $eventName hook repointed to $hookScript"
+                        }
+                    }
                 }
             }
         }
     }
     if ($alreadyThere) {
-        Write-Host "[AI OS] $eventName hook already registered - skipping"
+        Write-Host "[AI OS] $eventName hook already registered"
         continue
     }
     $newEntry = New-AiOsHookEntry -ScriptPath $hookScript

@@ -34,13 +34,13 @@ AI OS/
 ## Install on a new PC
 
 ```powershell
-git clone <your-private-remote> "$env:USERPROFILE\Documents\AI OS"
-powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\Documents\AI OS\install.ps1"
+git clone https://github.com/hawlen/ai-os.git "C:\AI OS"
+powershell -ExecutionPolicy Bypass -File "C:\AI OS\install.ps1"
 ```
 
 `install.ps1` is idempotent and non-destructive:
 - It writes the principles into `~/.claude/CLAUDE.md` **between `<!-- AI-OS:BEGIN -->` / `<!-- AI-OS:END -->` markers**, leaving anything you wrote outside the markers untouched. Re-running replaces only the managed block.
-- It adds the logging hooks to `~/.claude/settings.json` only if they aren't already there. Pass `-SkipHooks` to skip that part.
+- It adds the logging hooks to `~/.claude/settings.json` only if they aren't already there, and if the checkout has moved it repoints existing hooks at the new path. Pass `-SkipHooks` to skip that part.
 
 ## Update the principles everywhere
 
