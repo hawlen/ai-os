@@ -4,7 +4,7 @@
 #
 # Usage:  powershell -ExecutionPolicy Bypass -File install.ps1 [-SkipHooks]
 
-param([switch]$SkipHooks)
+param([switch]$SkipHooks, [switch]$Admin)
 $ErrorActionPreference = 'Stop'
 
 $root = $PSScriptRoot
@@ -21,7 +21,7 @@ $end   = '<!-- AI-OS:END -->'
 
 $files = Get-ChildItem (Join-Path $root 'principles') -Filter '*.md' | Sort-Object Name
 if (-not $files) { throw "No principle files found in $root\principles" }
-$body = ($files | ForEach-Object { (Get-Content $_.FullName -Raw).TrimEnd() }) -join "`r`n`r`n---`r`n`r`n"
+$body = ($files | ForEach-Object { (Get-Content $_.FullName -Raw -Encoding UTF8).TrimEnd() }) -join "`r`n`r`n---`r`n`r`n"
 $block = "$begin`r`n<!-- Managed by AI OS ($root). Edit principles\*.md and re-run install.ps1; do not edit inside this block. -->`r`n`r`n$body`r`n$end"
 
 $claudeMd = Join-Path $claudeDir 'CLAUDE.md'
@@ -41,7 +41,34 @@ if (Test-Path $claudeMd) {
 Write-Host "[AI OS] Principles deployed to $claudeMd ($($files.Count) file(s))"
 
 # ---------------------------------------------------------------------------
-# 2. Register SessionStart/SessionEnd logging hooks in ~/.claude/settings.json.
+# 2. Versioning guard: only the admin PC (marker file) may push main.
+# ---------------------------------------------------------------------------
+if ($Admin) {
+    New-Item -ItemType File -Path (Join-Path $env:USERPROFILE '.ai-os-admin') -Force | Out-Null
+    Write-Host '[AI OS] Admin marker created - this PC may publish main'
+}
+if (Test-Path (Join-Path $root '.git')) {
+    $hookDir = Join-Path $root '.git\hooks'
+    if (-not (Test-Path $hookDir)) { New-Item -ItemType Directory -Path $hookDir -Force | Out-Null }
+    $guard = @(
+        '#!/bin/sh',
+        '# AI OS guard: only the admin PC may push main.',
+        'if [ -f "$HOME/.ai-os-admin" ] || [ -f "$HOME/.ai-os-bootstrap" ]; then exit 0; fi',
+        'while read local_ref local_sha remote_ref remote_sha; do',
+        '  if [ "$remote_ref" = "refs/heads/main" ]; then',
+        '    echo "AI OS guard: this PC is not the admin PC; pushing main is blocked." >&2',
+        '    echo "Use sync.ps1 (machine branch) instead. If this IS the admin PC, run install.ps1 -Admin." >&2',
+        '    exit 1',
+        '  fi',
+        'done',
+        'exit 0'
+    )
+    [System.IO.File]::WriteAllText((Join-Path $hookDir 'pre-push'), (($guard -join "`n") + "`n"))
+    Write-Host '[AI OS] Git pre-push guard installed (main is admin-only)'
+}
+
+# ---------------------------------------------------------------------------
+# 3. Register SessionStart/SessionEnd logging hooks in ~/.claude/settings.json.
 #    Merges with existing settings; skips events that already have the hook.
 # ---------------------------------------------------------------------------
 if ($SkipHooks) { Write-Host '[AI OS] Hooks skipped (-SkipHooks)'; exit 0 }

@@ -53,6 +53,14 @@ powershell -ExecutionPolicy Bypass -File "C:\AI OS\install.ps1"
 - Delete the `<!-- AI-OS:BEGIN -->` … `<!-- AI-OS:END -->` block from `~/.claude/CLAUDE.md`.
 - Remove the two hook entries containing `log-session.ps1` from `~/.claude/settings.json`.
 
+## Versioning & multi-PC model
+
+- **`main` is canonical and admin-only.** A git pre-push guard blocks pushing `main` unless `~/.ai-os-admin` exists — created by running `install.ps1 -Admin` on the admin PC only.
+- **Every PC logs versions on its own branch** (`machine/<PCNAME>`). After any AI OS change or notable install: `sync.ps1 -Message "what changed and why"` — appends the explanation to `machines/<PCNAME>/log.md`, commits, and pushes. GitHub ends up holding every version of every PC, each with its reason.
+- **Adopt / roll back:** `adopt.ps1 -Ref <branch|tag|commit>` applies any logged version to this PC (an older commit = rollback), re-installs, and logs the adoption as a new version.
+- **Promote:** on the admin PC, `publish.ps1 -Ref <ref>` merges a reviewed version into `main` and pushes.
+- Honest limit: all PCs authenticate as the same GitHub account, so the guard is a local safety rail against accidents — not hard server-side security. Hard enforcement would need separate GitHub accounts plus branch protection.
+
 ## Roadmap ideas
 
 - Auto-pull principles on a schedule (Windows Task Scheduler or a Claude Code scheduled task).
