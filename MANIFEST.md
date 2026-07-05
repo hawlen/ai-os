@@ -152,13 +152,18 @@ three are stock ECC — patterns transfer; re-skin opportunistically.
 - **Deployed by:** `install.ps1` (agents + skills loops). **Provenance TODO:** original ECC sub-authors unpinned.
 
 ## 13. AI OS Dashboard — local project/observability dashboard
-- **Repo:** https://github.com/hawlen/ai-os-dashboard (public)
+- **Repo:** https://github.com/hawlen/ai-os-dashboard-dist (public, code-only distribution mirror).
+  Active development is in a separate **private** repo; the mirror is a clean-history snapshot with
+  no build docs — so section 7 can clone it anonymously without exposing dev history.
 - **Type:** PowerShell 5.1 generator (`generate.ps1` → self-contained `dashboard.html`) + desktop shortcut.
-- **Scope:** **per-machine** — cloned to `~\ai-os-dashboard` (override `$env:AI_OS_DASHBOARD_DIR`).
-- **Installed by:** `install.ps1` section 7 clones/fast-forwards the repo, then runs the repo's own
+- **Scope:** **per-machine** — cloned to `~\ai-os-dashboard` (override `$env:AI_OS_DASHBOARD_DIR`;
+  path resolved by `lib\Dashboard.ps1`'s `Resolve-DashboardDir`, unit-tested in `tests\Dashboard.Tests.ps1`).
+- **Installed by:** `install.ps1` section 7 clones/fast-forwards the mirror, then runs the repo's own
   `install.ps1` (Chrome probe → WScript.Shell desktop shortcut; falls back to the default browser
-  when Chrome is absent). Windows-only — `install.sh` prints a skip note.
+  when Chrome is absent). A failed clone/pull Warns and skips (never aborts the install). Windows-only
+  — `install.sh` prints a skip note.
 - **Update:** re-run the bootstrap — section 7 does `git pull --ff-only` and refreshes the shortcut.
+  To publish new dashboard code, snapshot the private dev repo into the mirror (see the dev repo).
 - **Use:** double-click the **AI OS Dashboard** desktop shortcut — it regenerates `dashboard.html`
   from `~/.claude` + project folders (all read-only) and opens it.
 

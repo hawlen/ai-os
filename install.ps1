@@ -71,10 +71,12 @@ if ($env:TWENTY_FIRST_API_KEY) {
 }
 
 # --- 7. AI OS Dashboard — per-machine clone + desktop shortcut (Windows) ------------------------
-#   Clones (or fast-forwards) the dashboard repo, then runs its own installer to (re)create the
-#   desktop shortcut. Wrapped so a dashboard failure never aborts the rest of the install.
+#   Clones (or fast-forwards) the PUBLIC distribution mirror (code-only; the dev repo is private),
+#   then runs its own installer to (re)create the desktop shortcut. Wrapped so a dashboard failure
+#   never aborts the rest of the install.
 Info 'Installing / updating AI OS Dashboard...'
-$dashDir = if ($env:AI_OS_DASHBOARD_DIR) { $env:AI_OS_DASHBOARD_DIR } else { Join-Path $env:USERPROFILE 'ai-os-dashboard' }
+. (Join-Path $PSScriptRoot 'lib\Dashboard.ps1')
+$dashDir = Resolve-DashboardDir -EnvOverride $env:AI_OS_DASHBOARD_DIR -UserProfile $env:USERPROFILE
 try {
     if (Test-Path (Join-Path $dashDir '.git')) {
         git -C $dashDir pull --ff-only
@@ -83,8 +85,8 @@ try {
         # silently reporting success against a stale clone.
         if ($LASTEXITCODE -ne 0) { throw "git pull --ff-only failed in $dashDir (local changes or diverged history?)" }
     } else {
-        git clone https://github.com/hawlen/ai-os-dashboard.git $dashDir
-        if ($LASTEXITCODE -ne 0) { throw "git clone of ai-os-dashboard failed" }
+        git clone https://github.com/hawlen/ai-os-dashboard-dist.git $dashDir
+        if ($LASTEXITCODE -ne 0) { throw "git clone of ai-os-dashboard-dist failed" }
     }
     & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $dashDir 'install.ps1')
     Good "dashboard ready at $dashDir (desktop shortcut created)"

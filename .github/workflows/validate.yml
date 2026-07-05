@@ -26,3 +26,22 @@ jobs:
       - uses: actions/checkout@v4
       - name: bash -n on installers
         run: bash -n bootstrap.sh install.sh && echo 'all .sh parse OK'
+
+  pester:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pester unit tests
+        shell: powershell
+        run: |
+          # Tests use Pester 3.x/4.x syntax (space-separated 'Should Be'); pin a pre-5.0 Pester.
+          $p = Get-Module -ListAvailable Pester |
+                 Where-Object { $_.Version -lt [version]'5.0.0' } |
+                 Sort-Object Version -Descending | Select-Object -First 1
+          if ($p) { Import-Module $p.Path -Force; Write-Output ("Using Pester {0}" -f $p.Version) }
+          else { throw 'No pre-5.0 Pester available on the runner' }
+          $r = Invoke-Pester -Path tests -PassThru
+          Write-Output ("Passed={0} Failed={1}" -f $r.PassedCount, $r.FailedCount)
+          # Force a deterministic exit code so a native command's leaked $LASTEXITCODE
+          # can't turn a passing run into a false step failure.
+          if ($r.FailedCount -gt 0) { exit 1 } else { exit 0 }
