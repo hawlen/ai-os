@@ -42,4 +42,6 @@ jobs:
           else { throw 'No pre-5.0 Pester available on the runner' }
           $r = Invoke-Pester -Path tests -PassThru
           Write-Output ("Passed={0} Failed={1}" -f $r.PassedCount, $r.FailedCount)
-          if ($r.FailedCount -gt 0) { exit 1 }
+          # Force a deterministic exit code so a native command's leaked $LASTEXITCODE
+          # can't turn a passing run into a false step failure.
+          if ($r.FailedCount -gt 0) { exit 1 } else { exit 0 }
