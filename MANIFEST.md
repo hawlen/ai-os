@@ -151,6 +151,17 @@ three are stock ECC — patterns transfer; re-skin opportunistically.
   - `llm-trading-agent-security` — spend limits, circuit breakers, treat-market-input-as-attack for order authority.
 - **Deployed by:** `install.ps1` (agents + skills loops). **Provenance TODO:** original ECC sub-authors unpinned.
 
+## 13. AI OS Dashboard — local project/observability dashboard
+- **Repo:** https://github.com/hawlen/ai-os-dashboard (public)
+- **Type:** PowerShell 5.1 generator (`generate.ps1` → self-contained `dashboard.html`) + desktop shortcut.
+- **Scope:** **per-machine** — cloned to `~\ai-os-dashboard` (override `$env:AI_OS_DASHBOARD_DIR`).
+- **Installed by:** `install.ps1` section 7 clones/fast-forwards the repo, then runs the repo's own
+  `install.ps1` (Chrome probe → WScript.Shell desktop shortcut; falls back to the default browser
+  when Chrome is absent). Windows-only — `install.sh` prints a skip note.
+- **Update:** re-run the bootstrap — section 7 does `git pull --ff-only` and refreshes the shortcut.
+- **Use:** double-click the **AI OS Dashboard** desktop shortcut — it regenerates `dashboard.html`
+  from `~/.claude` + project folders (all read-only) and opens it.
+
 ---
 
 ## Global-layer state (this machine)
@@ -159,6 +170,7 @@ three are stock ECC — patterns transfer; re-skin opportunistically.
 - `~/.claude/agents/` — the 7 generic subagents (see §4), deployed by `install.ps1`.
 - `~/.claude/` plugins — `superpowers@claude-plugins-official` (user scope, enabled).
 - `~/.claude.json` `mcpServers` — `magic` (see §5; key lives only on the machine, never in this repo).
+- `~\ai-os-dashboard\` — dashboard clone (see section 13); desktop shortcut `AI OS Dashboard.lnk`.
 - `reference/` — read-only ECC snapshot to mine from; never installed/run (see `reference/README.md`).
 
 ## Adding the next tool

@@ -62,6 +62,9 @@ else
   warn "TWENTY_FIRST_API_KEY not set (or no claude CLI) — skipping Magic MCP (key at https://21st.dev)"
 fi
 
+# 7. AI OS Dashboard — Windows-only for now
+info "AI OS Dashboard is Windows-only for now — skipping (PowerShell 5.1 generator + desktop shortcut)."
+
 # guard-destructive hook: VENDORED ONLY, intentionally NOT enabled (see MANIFEST.md section 6)
 info "guard-destructive hook is vendored but OFF by default (see MANIFEST.md to enable)."
 info "Done. Per-project spec-kit:  specify init --here --integration claude --script sh --force"

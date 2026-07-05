@@ -70,6 +70,23 @@ if ($env:TWENTY_FIRST_API_KEY) {
     Warn 'TWENTY_FIRST_API_KEY not set — skipping Magic MCP. Set it and re-run to enable (key at https://21st.dev).'
 }
 
+# --- 7. AI OS Dashboard — per-machine clone + desktop shortcut (Windows) ------------------------
+#   Clones (or fast-forwards) the dashboard repo, then runs its own installer to (re)create the
+#   desktop shortcut. Wrapped so a dashboard failure never aborts the rest of the install.
+Info 'Installing / updating AI OS Dashboard...'
+$dashDir = if ($env:AI_OS_DASHBOARD_DIR) { $env:AI_OS_DASHBOARD_DIR } else { Join-Path $env:USERPROFILE 'ai-os-dashboard' }
+try {
+    if (Test-Path (Join-Path $dashDir '.git')) {
+        git -C $dashDir pull --ff-only
+    } else {
+        git clone https://github.com/hawlen/ai-os-dashboard.git $dashDir
+    }
+    & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $dashDir 'install.ps1')
+    Good "dashboard ready at $dashDir (desktop shortcut created)"
+} catch {
+    Warn "dashboard install skipped: $($_.Exception.Message)"
+}
+
 # --- guard-destructive hook: VENDORED ONLY, intentionally NOT enabled --------------------------
 #   hooks\guard-destructive.ps1 is a destructive-command backstop. It is deliberately NOT wired here:
 #   it runs on every Bash/PowerShell call and can false-positive. To opt in, copy it into a project's
